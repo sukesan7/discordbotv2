@@ -37,4 +37,5 @@ async def send_embed(interaction: discord.Interaction):
 # - nfl / nba news reports
 # - soccer injury reports + news reports
 # - find host for discord bot
+# - test
 
