@@ -28,19 +28,43 @@ def setup_commands(bot): #setup the commands
     @bot.command(name='serverinfo')
     async def server_info(ctx):
         guild = ctx.guild
-        await ctx.send(f'Server name: {guild.name}\nTotal members: {guild.member_count}')
+        
+        embed = discord.Embed(
+            title="Server Information",
+            description=f"**Server name:** {guild.name}\n**Total members:** {guild.member_count}",
+            color=discord.Color.red()  # Red color for the embed
+        )
+        embed.set_footer(text="sportsbetting")  # Footer text
+
+        await ctx.send(embed=embed)
 
     # --------------- Info command
     @bot.command(name='info')
-    async def server_info(ctx):
-        guild = ctx.guild
-        await ctx.send(f'This discord bot was created by .ss7 for sportsbetting. It is still under construction')
+    async def info(ctx):
+        embed = discord.Embed(
+            title="Bot Information",
+            description="This Discord bot was created by .ss7 for sports betting. It is still under construction.",
+            color=discord.Color.red()  # Red color for the embed
+        )
+        embed.set_footer(text="sportsbetting")  # Footer text
+
+        await ctx.send(embed=embed)
 
     # --------------- User info command
     @bot.command(name='userinfo')
     async def user_info(ctx, member: discord.Member = None):
         member = member or ctx.author
-        await ctx.send(f'User: {member.name}\nJoined at: {member.joined_at}\nID: {member.id}')
+
+        embed = discord.Embed(
+            title="User Information",
+            color=discord.Color.red()  # Red color for the embed
+        )
+        embed.add_field(name="User", value=member.name, inline=False)
+        embed.add_field(name="Joined at", value=member.joined_at.strftime("%Y-%m-%d %H:%M:%S"), inline=False)
+        embed.add_field(name="ID", value=member.id, inline=False)
+        embed.set_footer(text="sportsbetting")  # Footer text
+
+        await ctx.send(embed=embed)
 
     # --------------- Play music command
     @bot.command(name='play')
@@ -48,11 +72,11 @@ def setup_commands(bot): #setup the commands
         voice_channel = ctx.author.voice.channel if ctx.author.voice else None
         if not voice_channel:
             return await ctx.send("User is not in a voice channel.")
-        
+
         # Connect to the voice channel if not already connected
         if not ctx.voice_client:
             await voice_channel.connect()
-        
+
         # Download and queue the song
         async with ctx.typing():
             with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
@@ -62,11 +86,21 @@ def setup_commands(bot): #setup the commands
                 url = info['url']
                 title = info['title']
                 queue.append((url, title))
-                await ctx.send(f'Added to queue: **{title}**')
+
+                # Create an embed message for the added song
+                embed = discord.Embed(
+                    title="Song Added to Queue",
+                    description=f"Added to queue: **{title}**",
+                    color=discord.Color.red()  # Red color for the embed
+                )
+                embed.set_footer(text="sportsbetting")  # Footer text
+
+                await ctx.send(embed=embed)
 
         # Play the song if nothing else is currently playing
         if not ctx.voice_client.is_playing():
             await play_next(ctx)
+
 
     # --------------- Function to play the next song in the queue
     async def play_next(ctx):
@@ -78,7 +112,16 @@ def setup_commands(bot): #setup the commands
                     source, 
                     after=lambda e: asyncio.run_coroutine_threadsafe(play_next(ctx), bot.loop)
                 )
-                await ctx.send(f'Now playing: **{title}**')
+                
+                # Create an embed message for the now playing song
+                embed = discord.Embed(
+                    title="Now Playing",
+                    description=f"**{title}**",
+                    color=discord.Color.red()  # Red color for the embed
+                )
+                embed.set_footer(text="sportsbetting")  # Footer text
+                
+                await ctx.send(embed=embed)
             except Exception as e:
                 await ctx.send(f"An error occurred while playing {title}: {e}")
                 print(f"Error: {e}")
@@ -92,59 +135,106 @@ def setup_commands(bot): #setup the commands
     async def skip(ctx):
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.stop()
-            await ctx.send("The track has been skipped.")
+            
+            # Create an embed message for the skipped track
+            embed = discord.Embed(
+                title="Track Skipped",
+                description="The track has been skipped.",
+                color=discord.Color.red()  # Red color for the embed
+            )
+            embed.set_footer(text="sportsbetting")  # Footer text
+            
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("There is no track currently playing.")
+
 
     # --------------- Queue command to display the list of queued songs
     @bot.command(name='queue')
     async def show_queue(ctx):
         if not queue:
-            return await ctx.send("The queue is empty.")
+            embed = discord.Embed(
+                title="Music Queue",
+                description="The queue is empty.",
+                color=discord.Color.red()
+            )
+            embed.set_footer(text="sportsbetting")  # Footer text
+            return await ctx.send(embed=embed)
 
         embed = discord.Embed(title="Music Queue", color=discord.Color.red())
         for idx, (_, title) in enumerate(queue, start=1):
             embed.add_field(name=f"{idx}. {title}", value='\u200b', inline=False)
         
+        embed.set_footer(text="sportsbetting")  # Footer text
         await ctx.send(embed=embed)
 
     # --------------- Pause command to pause the current track
     @bot.command(name='pause')
     async def pause(ctx):
         """Pause the currently playing track."""
+        embed = discord.Embed(color=discord.Color.red())  # Embed color set to red
+
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.pause()  # Pauses the current track
-            await ctx.send("The current track has been paused.")
+            embed.title = "Track Paused"
+            embed.description = "The current track has been paused."
         else:
-            await ctx.send("There is no track currently playing to pause.")
+            embed.title = "No Track Playing"
+            embed.description = "There is no track currently playing to pause."
+        
+        embed.set_footer(text="sportsbetting")  # Footer text
+        await ctx.send(embed=embed)
 
     # --------------- Resume command to resume the current track
     @bot.command(name='resume')
     async def resume(ctx):
         """Resume the currently paused track."""
+        embed = discord.Embed(color=discord.Color.red())  # Embed color set to red
+
         if ctx.voice_client and ctx.voice_client.is_paused():
             ctx.voice_client.resume()  # Resumes the paused track
-            await ctx.send("The paused track has been resumed.")
+            embed.title = "Track Resumed"
+            embed.description = "The paused track has been resumed."
         else:
-            await ctx.send("There is no track currently paused to resume.")
-
+            embed.title = "No Track Paused"
+            embed.description = "There is no track currently paused to resume."
+        
+        embed.set_footer(text="sportsbetting")  # Footer text
+        await ctx.send(embed=embed)
 
     # --------------- Stop command to stop the current track
     @bot.command(name='stop')
     async def stop(ctx):
         """Stop the currently playing track."""
+        embed = discord.Embed(color=discord.Color.red())  # Embed color set to red
+
         if ctx.voice_client and ctx.voice_client.is_playing():
             ctx.voice_client.stop()  # Stops the current track
-            await ctx.send("The current track has been stopped.")
+            embed.title = "Track Stopped"
+            embed.description = "The current track has been stopped."
         else:
-            await ctx.send("There is no track currently playing.")
+            embed.title = "No Track Playing"
+            embed.description = "There is no track currently playing."
+
+        embed.set_footer(text="sportsbetting")  # Footer text
+        await ctx.send(embed=embed)
 
     # --------------- Disconnect command to make the bot leave the voice channel
     @bot.command(name='disconnect')
     async def disconnect(ctx):
+        embed = discord.Embed(color=discord.Color.red())  # Embed color set to red
+
         if ctx.voice_client:
             await ctx.voice_client.disconnect()
-            await ctx.send("Disconnected from the voice channel.")
+            embed.title = "Disconnected"
+            embed.description = "The bot has been disconnected from the voice channel."
         else:
-            await ctx.send("The bot is not connected to any voice channel.")
+            embed.title = "Not Connected"
+            embed.description = "The bot is not connected to any voice channel."
+
+        embed.set_footer(text="sportsbetting")  # Footer text
+        await ctx.send(embed=embed)
+
 
     # --------------- Help command to show all available commands
     bot.remove_command('commands')  # Remove the default help command
@@ -154,7 +244,7 @@ def setup_commands(bot): #setup the commands
         embed = discord.Embed(
             title="Available Commands",
             description="Here are the commands you can use with this bot:",
-            color=discord.Color.red()
+            color=discord.Color.red()  # Embed color set to red
         )
         
         embed.add_field(name=".serverinfo", value="Displays information about the server.", inline=False)
@@ -168,7 +258,10 @@ def setup_commands(bot): #setup the commands
         embed.add_field(name=".matches [YYYY-MM-DD]", value="Finds games played for both NFL and NBA on a specific date.", inline=False)
         embed.add_field(name=".search [sport] [team name]", value="Searches for a specific team to display information.", inline=False)
 
+        embed.set_footer(text="sportsbetting")  # Footer text
         await ctx.send(embed=embed)
+
+    # SPECIFIC COMMANDS FOR MATCHES AND SEARCHING BELOW
 
     # --------------- Matches command to display games for both NBA and NFL on a given date
     @bot.command(name='matches')
