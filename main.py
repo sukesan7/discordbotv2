@@ -1,24 +1,36 @@
 import discord
-from discord.ext import tasks
-from nba import get_nba_injury_report
-from nfl import get_nfl_injury_report
-from commands import MyClient
-from security import DISCORD_TOKEN, DISCORD_CHANNEL_ID
+from discord.ext import tasks, commands
 
-client = MyClient()
+from nba import NBA  # Import the new NBA class
+from nfl import get_nfl_injury_report  # Assuming the NFL scraping function exists
 
-@tasks.loop(hours=12)
-async def post_injury_reports():
-    channel = client.get_channel(DISCORD_CHANNEL_ID)
+from security import DISCORD_TOKEN, NBA_CHANNEL_ID, NFL_CHANNEL_ID
+
+intents = discord.Intents.default()
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+# Create an instance of the NBA class
+nba = NBA(bot)
+
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user}')
+    nba.scrape_nba.start()  # Start the NBA scraping task
+    check_nfl_injuries.start()  # Start the NFL scraping task (assuming function exists)
+
+@tasks.loop(minutes=30)
+async def check_nfl_injuries():
+    channel = bot.get_channel(NFL_CHANNEL_ID)
     if channel:
-        nba_report = get_nba_injury_report()
-        nfl_report = get_nfl_injury_report()
-        await channel.send(nba_report)
+        nfl_report = get_nfl_injury_report()  # Assuming the function exists
         await channel.send(nfl_report)
 
-@client.event
-async def on_ready():
-    post_injury_reports.start()
-    print(f'Logged in as {client.user}')
+async def main():
+    # Load slash commands from the commands module (if applicable)
+    # await bot.load_extension('commands')
+    # Run the bot
+    await bot.start(DISCORD_TOKEN)
 
-client.run(DISCORD_TOKEN)
+# Run the bot using asyncio.run for proper event loop management
+import asyncio
+asyncio.run(main())

@@ -1,41 +1,32 @@
 import discord
 from discord import app_commands
 
-class MyClient(discord.Client):
-    def __init__(self):
-        super().__init__(intents=discord.Intents.default())
-        self.tree = app_commands.CommandTree(self)
-    
-    async def setup_hook(self):
-        await self.tree.sync()
+class MiscCommands(discord.ext.commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-client = MyClient()
+    @app_commands.command(name='serverinfo', description="Displays information about the server.")
+    async def server_info(self, interaction: discord.Interaction):
+        guild = interaction.guild
+        if guild:
+            embed = discord.Embed(
+                title=f"{guild.name} Info",
+                description=f"ID: {guild.id}\nMembers: {guild.member_count}",
+                color=discord.Color.blue()
+            )
+            await interaction.response.send_message(embed=embed)
+        else:
+            await interaction.response.send_message("This command can only be used in a server.")
 
-# Example command to get server information
-@client.tree.command(name="serverinfo", description="Displays information about the server.")
-async def server_info(interaction: discord.Interaction):
-    server = interaction.guild
-    message = f"Server Name: {server.name}\nTotal Members: {server.member_count}"
-    await interaction.response.send_message(message)
+    @app_commands.command(name='userinfo', description="Displays information about the user.")
+    async def user_info(self, interaction: discord.Interaction):
+        user = interaction.user
+        embed = discord.Embed(
+            title=f"{user.name}'s Info",
+            description=f"ID: {user.id}\nUsername: {user.name}\nDiscriminator: {user.discriminator}",
+            color=discord.Color.green()
+        )
+        await interaction.response.send_message(embed=embed)
 
-# Example command to send an embedded message
-@client.tree.command(name="embed", description="Sends an embedded message.")
-async def send_embed(interaction: discord.Interaction):
-    embed = discord.Embed(
-        title="Example Embed",
-        description="This is an embedded message.",
-        color=0x3498db
-    )
-    embed.set_footer(text="Powered by discord.py")
-    await interaction.response.send_message(embed=embed)
-
-# Additional commands can be added here...
-
-# create the following:
-# - new file for channel ids
-# - nfl injury reports
-# - nfl / nba news reports
-# - soccer injury reports + news reports
-# - find host for discord bot
-# - test
-
+async def setup(bot):
+    await bot.add_cog(MiscCommands(bot))

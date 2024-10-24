@@ -1,36 +1,62 @@
-import requests
+from discord.ext import commands, tasks
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+import time
 
-def get_nba_injury_report():
-    try:
-        url = "https://www.rotowire.com/basketball/injury-report.php"
-        response = requests.get(url)
-        soup = BeautifulSoup(response.content, 'html.parser')
+class NBA:
+    def __init__(self, bot):
+        self.bot = bot
+        self.injury_url = "https://www.rotowire.com/basketball/injury-report.php"
+        self.news_url = "https://www.rotowire.com/basketball/news/"  # Replace with actual news URL
+        self.channel_id_injuries = 123456789012345678  # Replace with your channel ID for NBA injuries
+        self.channel_id_news = 987654321098765432  # Replace with your channel ID for NBA news
 
-        # Find the table that holds the injury report
-        table = soup.find('table')  # Adjust this if there's a specific class or id for the injury table
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.driver = webdriver.Chrome(ChromeDriverManager().install())
+        self.driver.get(self.injury_url)
+        self.last_injury_data = self.get_injury_data()
+        print(f"NBA: Connected and ready to scrape!")
 
-        # Check if the table exists
-        if table is None:
-            return "Error: Could not find the injury report table. The page structure might have changed."
+    def get_injury_data(self):
+        time.sleep(5)  # Adjust wait time as needed
+        self.driver.get(self.injury_url)
+        soup = BeautifulSoup(self.driver.page_source, "html.parser")
 
-        # Get all rows in the table, skipping the header row
-        rows = table.find_all('tr')[1:]
+        # Assuming the injury data is within a table with a specific class
+        injury_table = soup.find("table", class_="injury-table")  # Replace with the actual class name
 
-        message = "**NBA Injury Reports:**\n"
-        for row in rows:
-            cells = row.find_all('td')
+        if injury_table:
+            injury_rows = injury_table.find_all("tr")
+            injury_data = []
+            for row in injury_rows:
+                cells = row.find_all("td")
+                if len(cells) >= 3:  # Ensure there are at least 3 columns
+                    injury_data.append(f"{cells[0].text.strip()} - {cells[1].text.strip()} - {cells[2].text.strip()}")
+            return injury_data
+        else:
+            return []  # If the table is not found, return an empty list
 
-            # Extracting details from each cell
-            player = cells[0].get_text(strip=True) if len(cells) > 0 else "Unknown"
-            team = cells[1].get_text(strip=True) if len(cells) > 1 else "Unknown"
-            position = cells[2].get_text(strip=True) if len(cells) > 2 else "Unknown"
-            injury = cells[3].get_text(strip=True) if len(cells) > 3 else "Unknown"
-            status = cells[4].get_text(strip=True) if len(cells) > 4 else "Unknown"
-            return_timeline = cells[5].get_text(strip=True) if len(cells) > 5 else "N/A"
+    async def check_for_updates(self):
+        current_data = self.get_injury_data()
+        if current_data != self.last_injury_data:
+            self.last_injury_data = current_data
+            channel = self.bot.get_channel(self.channel_id_injuries)
+            await channel.send("**New NBA injuries reported!**")
+            for injury in current_data:
+                await channel.send(injury)
+        # Add logic for scraping and posting NBA news (similar to injury data)
 
-            message += f"{player} ({team}, {position}): {status}, {injury}. Return: {return_timeline}\n"
+    @tasks.loop(minutes=10)  # Adjust scraping interval as needed
+    async def scrape_nba(self):
+        await self.check_for_updates()
 
-        return message
-    except Exception as e:
-        return f"Error fetching NBA injury report: {e}"
+    async def cog_load(self):
+        self.scrape_nba.start()
+
+    async def cog_unload(self):
+        self.scrape_nba.cancel()
+        self.driver.quit()
+
+setup = NBA
