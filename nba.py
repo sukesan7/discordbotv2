@@ -1,62 +1,82 @@
-from discord.ext import commands, tasks
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-import time
+import discord
+from discord.ext import tasks
+import requests
+import json
 
-class NBA:
-    def __init__(self, bot):
-        self.bot = bot
-        self.injury_url = "https://www.rotowire.com/basketball/injury-report.php"
-        self.news_url = "https://www.rotowire.com/basketball/news/"  # Replace with actual news URL
-        self.channel_id_injuries = 123456789012345678  # Replace with your channel ID for NBA injuries
-        self.channel_id_news = 987654321098765432  # Replace with your channel ID for NBA news
+NBA_SCORES_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
+NBA_NEWS_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/nba/news"
+DISCORD_CHANNEL_ID_NBA = 1298131694565462068  # Replace with your NBA channel ID
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.driver = webdriver.Chrome(ChromeDriverManager().install())
-        self.driver.get(self.injury_url)
-        self.last_injury_data = self.get_injury_data()
-        print(f"NBA: Connected and ready to scrape!")
+def start_nba_updates(bot):
+    """Start NBA updates when the bot is ready."""
+    
+    @tasks.loop(minutes=10)
+    async def fetch_nba_scores():
+        """Fetch and update NBA scores to the specified Discord channel."""
+        try:
+            response = requests.get(NBA_SCORES_URL)
+            data = response.json()
+            games = data.get('events', [])
 
-    def get_injury_data(self):
-        time.sleep(5)  # Adjust wait time as needed
-        self.driver.get(self.injury_url)
-        soup = BeautifulSoup(self.driver.page_source, "html.parser")
+            if not games:
+                print("No NBA games found in the API response.")
+                return
 
-        # Assuming the injury data is within a table with a specific class
-        injury_table = soup.find("table", class_="injury-table")  # Replace with the actual class name
+            for game in games:
+                home_team = game['competitions'][0]['competitors'][0]['team']['displayName']
+                away_team = game['competitions'][0]['competitors'][1]['team']['displayName']
+                home_score = game['competitions'][0]['competitors'][0]['score']
+                away_score = game['competitions'][0]['competitors'][1]['score']
+                status = game['status']['type']['name']
 
-        if injury_table:
-            injury_rows = injury_table.find_all("tr")
-            injury_data = []
-            for row in injury_rows:
-                cells = row.find_all("td")
-                if len(cells) >= 3:  # Ensure there are at least 3 columns
-                    injury_data.append(f"{cells[0].text.strip()} - {cells[1].text.strip()} - {cells[2].text.strip()}")
-            return injury_data
-        else:
-            return []  # If the table is not found, return an empty list
+                description = f"{home_team} vs {away_team}\nScore: {home_score} - {away_score}\nStatus: {status}"
+                
+                embed = discord.Embed(
+                    title=f"NBA Score Update: {home_team} vs {away_team}",
+                    description=description,
+                    color=discord.Color.blue()
+                )
 
-    async def check_for_updates(self):
-        current_data = self.get_injury_data()
-        if current_data != self.last_injury_data:
-            self.last_injury_data = current_data
-            channel = self.bot.get_channel(self.channel_id_injuries)
-            await channel.send("**New NBA injuries reported!**")
-            for injury in current_data:
-                await channel.send(injury)
-        # Add logic for scraping and posting NBA news (similar to injury data)
+                channel = bot.get_channel(DISCORD_CHANNEL_ID_NBA)
+                await channel.send(embed=embed)
+        
+        except Exception as e:
+            print(f"Error fetching NBA scores: {e}")
 
-    @tasks.loop(minutes=10)  # Adjust scraping interval as needed
-    async def scrape_nba(self):
-        await self.check_for_updates()
+    @tasks.loop(minutes=10)
+    async def fetch_nba_news():
+        """Fetch and update NBA news to the specified Discord channel."""
+        try:
+            response = requests.get(NBA_NEWS_URL)
+            data = response.json()
+            articles = data.get('articles', [])
 
-    async def cog_load(self):
-        self.scrape_nba.start()
+            if not articles:
+                print("No NBA news found in the API response.")
+                return
 
-    async def cog_unload(self):
-        self.scrape_nba.cancel()
-        self.driver.quit()
+            for article in articles[:5]:  # Limit to the top 5 news articles
+                title = article.get('headline', 'No title')
+                description = article.get('description', 'No description available')
+                link = article.get('links', {}).get('web', {}).get('href', 'No link available')
 
-setup = NBA
+                embed = discord.Embed(
+                    title=title,
+                    description=description,
+                    url=link,
+                    color=discord.Color.orange()
+                )
+
+                channel = bot.get_channel(DISCORD_CHANNEL_ID_NBA)
+                await channel.send(embed=embed)
+        
+        except Exception as e:
+            print(f"Error fetching NBA news: {e}")
+
+    # Start the loops when the bot is ready
+    @bot.event
+    async def on_ready():
+        fetch_nba_scores.start()
+        fetch_nba_news.start()
+        print("NBA updates have started.")
+
