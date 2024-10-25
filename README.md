@@ -13,11 +13,14 @@ This is a multipurpose discord bot under development  designed to aid in sportsb
 - Music Capabilities (play, stop, pause, queue)
 - Sports Match History
 - Search Function for Sports and Teams
+- Manually Search Latest Odds and News for NFL and NBA
 
 
 
 ## Screenshots
 ![image](https://github.com/user-attachments/assets/b79d93aa-6c6b-45b8-a084-bb2d0fde26b7)
 ![image](https://github.com/user-attachments/assets/5471d2d2-ccf3-4032-951b-6d3741288607)
+![image](https://github.com/user-attachments/assets/e6e3eb80-9b18-4db2-9599-1eb924cc58fd)
+
 
 
