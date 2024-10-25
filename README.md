@@ -14,6 +14,7 @@ This is a multipurpose discord bot under development  designed to aid in sportsb
 - Sports Match History
 - Search Function for Sports and Teams
 - Manually Search Latest Odds and News for NFL and NBA
+- Interval Updates on News and Odds for NFL and NBA to Specific Channels
 
 
 
