@@ -3,9 +3,17 @@ from discord.ext import tasks
 import requests
 from security import ODDS_API_KEY, DISCORD_CHANNEL_ID_NBA_NEWS, DISCORD_CHANNEL_ID_NBA_ODDS
 
+# --------------------------------------------------------------------------
+# ------------------------------ Declarations ------------------------------
+# --------------------------------------------------------------------------
+
 NBA_SCORES_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
 NBA_NEWS_URL = "http://site.api.espn.com/apis/site/v2/sports/basketball/nba/news"
 NBA_ODDS_URL = f"https://api.the-odds-api.com/v4/sports/basketball_nba/odds"
+
+# -----------------------------------------------------------------------
+# ------------------------------ Functions ------------------------------
+# -----------------------------------------------------------------------
 
 async def fetch_latest_nba_odds():
     """Fetch the latest NBA odds."""

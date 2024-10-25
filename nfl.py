@@ -3,9 +3,17 @@ from discord.ext import tasks
 import requests
 from security import ODDS_API_KEY, DISCORD_CHANNEL_ID_NFL_NEWS, DISCORD_CHANNEL_ID_NFL_ODDS
 
+# --------------------------------------------------------------------------
+# ------------------------------ Declarations ------------------------------
+# --------------------------------------------------------------------------
+
 NFL_SCORES_URL = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
 NFL_NEWS_URL = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/news"
 NFL_ODDS_URL = f"https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds"
+
+# -----------------------------------------------------------------------
+# ------------------------------ Functions ------------------------------
+# -----------------------------------------------------------------------
 
 async def fetch_latest_nfl_odds():
     """Fetch the latest NFL odds."""

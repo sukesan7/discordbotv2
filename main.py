@@ -3,6 +3,7 @@ from discord.ext import commands
 from commands import setup_commands
 from nba import start_nba_updates, fetch_latest_nba_odds, fetch_latest_nba_news
 from nfl import start_nfl_updates, fetch_latest_nfl_odds, fetch_latest_nfl_news
+import asyncio
 from security import (
     DISCORD_TOKEN,
     DISCORD_CHANNEL_ID_NBA_NEWS,
@@ -10,14 +11,13 @@ from security import (
     DISCORD_CHANNEL_ID_NFL_NEWS,
     DISCORD_CHANNEL_ID_NFL_ODDS,
 )
-import asyncio
 
-# Discord intents
+# Intents for the discord bot
 intents = discord.Intents.default()
 intents.message_content = True
 intents.voice_states = True
 
-# Bot prefix (only recognize the ".")
+# Bot Prefix
 bot = commands.Bot(command_prefix=".", intents=intents)
 
 # Setup commands
@@ -62,10 +62,12 @@ async def send_latest_nfl_data():
     if nfl_news_channel:
         await nfl_news_channel.send(embed=news_embed)
 
+# Start the discord bot
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user.name}')
     
+    # add a timer to let the bot fully start
     await asyncio.sleep(5)
 
     # Send the latest data
@@ -78,6 +80,6 @@ async def on_ready():
     start_nba_updates(bot)
     start_nfl_updates(bot)
 
-# Run bot
+# Run the discord bot
 if __name__ == '__main__':
     bot.run(DISCORD_TOKEN)
