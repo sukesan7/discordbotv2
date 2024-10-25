@@ -4,6 +4,8 @@ import yt_dlp
 import asyncio
 import requests
 import datetime
+from nba import fetch_latest_nba_odds, fetch_latest_nba_news
+from nfl import fetch_latest_nfl_odds, fetch_latest_nfl_news
 
 # --------------- Define the ESPN URLs for NBA and NFL searching
 espn_urls = {
@@ -248,15 +250,15 @@ def setup_commands(bot): #setup the commands
         )
         
         embed.add_field(name=".serverinfo", value="Displays information about the server.", inline=False)
-        embed.add_field(name=".userinfo [user]", value="Displays information about a user.", inline=False)
-        embed.add_field(name=".play [song name or URL]", value="Plays the specified song in the voice channel.", inline=False)
+        embed.add_field(name=".userinfo <user>", value="Displays information about a user.", inline=False)
+        embed.add_field(name=".play <song name or URL>", value="Plays the specified song in the voice channel.", inline=False)
         embed.add_field(name=".stop", value="Stops the currently playing track.", inline=False)
         embed.add_field(name=".pause", value="Pauses the currently playing track.", inline=False)
         embed.add_field(name=".resume", value="Resumes the currently paused track.", inline=False)
         embed.add_field(name=".queue", value="Shows the current music queue.", inline=False)
         embed.add_field(name=".skip", value="Skips the currently playing track.", inline=False)
-        embed.add_field(name=".matches [YYYY-MM-DD]", value="Finds games played for both NFL and NBA on a specific date.", inline=False)
-        embed.add_field(name=".search [sport] [team name]", value="Searches for a specific team to display information.", inline=False)
+        embed.add_field(name=".matches <YYYY-MM-DD>", value="Finds games played for both NFL and NBA on a specific date.", inline=False)
+        embed.add_field(name=".search <sport> <team name>", value="Searches for a specific team to display information.", inline=False)
 
         embed.set_footer(text="sportsbetting")  # Footer text
         await ctx.send(embed=embed)
@@ -355,7 +357,7 @@ def setup_commands(bot): #setup the commands
                 embed=discord.Embed(
                     title="Available Sports",
                     description="To search for a team, use the format:\n"
-                                "`/search <sport> <team_name>`\n\n"
+                                "`.search <sport> <team_name>`\n\n"
                                 "Available Sports:\n"
                                 "- NBA\n"
                                 "- NFL",
@@ -517,8 +519,85 @@ def setup_commands(bot): #setup the commands
         else:
             embed.add_field(name="Next Match", value="No upcoming matches", inline=False)
 
+        
         await ctx.send(embed=embed)
 
     # can add future commands below in same format
   
+    #odds command for sport type
+    @bot.command(name='odds')
+    async def odds(ctx, sport: str = None):
+        """
+        Responds with the latest odds for the given sport.
+        Usage: .odds (sport)
+        """
+        if sport is None:
+            embed = discord.Embed(
+                title="Invalid Command Usage",
+                description="Please specify a sport.",
+                color=discord.Color.red()
+            )
+            embed.add_field(name="Usage", value="`.odds (sport)`", inline=False)
+            embed.add_field(name="Available Sports", value="`nba`, `nfl`", inline=False)
+            await ctx.send(embed=embed)
+            return
+        
+        sport = sport.lower()
+        
+        if sport == "nba":
+            odds_embed = await fetch_latest_nba_odds()
+        elif sport == "nfl":
+            odds_embed = await fetch_latest_nfl_odds()
+        else:
+            embed = discord.Embed(
+                title="Invalid Sport",
+                description="Please use a valid sport.",
+                color=discord.Color.red()
+            )
+            embed.add_field(name="Available Sports", value="`nba`, `nfl`", inline=False)
+            await ctx.send(embed=embed)
+            return
 
+        if isinstance(odds_embed, str):
+            odds_embed = discord.Embed(title=f"Error Fetching {sport.upper()} Odds", description=odds_embed, color=discord.Color.red())
+
+        await ctx.send(embed=odds_embed)
+
+    #odds command for sport type
+    @bot.command(name='news')
+    async def news(ctx, sport: str = None):
+        """
+        Responds with the latest news for the given sport.
+        Usage: .news (sport)
+        """
+        if sport is None:
+            embed = discord.Embed(
+                title="Invalid Command Usage",
+                description="Please specify a sport.",
+                color=discord.Color.red()
+            )
+            embed.add_field(name="Usage", value="`.news (sport)`", inline=False)
+            embed.add_field(name="Available Sports", value="`nba`, `nfl`", inline=False)
+            await ctx.send(embed=embed)
+            return
+
+        sport = sport.lower()
+
+        if sport == "nba":
+            news_embed = await fetch_latest_nba_news()
+        elif sport == "nfl":
+            news_embed = await fetch_latest_nfl_news()
+        else:
+            embed = discord.Embed(
+                title="Invalid Sport",
+                description="Please use a valid sport.",
+                color=discord.Color.red()
+            )
+            embed.add_field(name="Available Sports", value="`nba`, `nfl`", inline=False)
+            await ctx.send(embed=embed)
+            return
+
+        if isinstance(news_embed, str):
+            news_embed = discord.Embed(title=f"Error Fetching {sport.upper()} News", description=news_embed, color=discord.Color.red())
+
+        await ctx.send(embed=news_embed)
