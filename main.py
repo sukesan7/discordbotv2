@@ -66,19 +66,21 @@ async def send_latest_nfl_data():
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user.name}')
-    
-    # add a timer to let the bot fully start
+
+    # Add a delay to ensure the bot is fully ready
     await asyncio.sleep(5)
 
-    # Send the latest data
+    # Send the latest data initially
     await send_latest_nba_data()
     await send_latest_nfl_data()
 
-    print("Latest NBA and NFL news has been sent")
+    print("Initial NBA and NFL news has been sent.")
 
     # Start NBA and NFL updates
     start_nba_updates(bot)
     start_nfl_updates(bot)
+
+    print("NBA and NFL update loops have started.")
 
 # Run the discord bot
 if __name__ == '__main__':
