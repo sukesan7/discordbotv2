@@ -48,6 +48,7 @@ async def fetch_latest_nba_odds():
         return f"Error fetching NBA odds: {e}"
 
 async def fetch_latest_nba_news():
+    """Fetch the latest NBA news."""
     try:
         response = requests.get(NBA_NEWS_URL)
         data = response.json()
@@ -71,6 +72,7 @@ async def fetch_latest_nba_news():
 def start_nba_updates(bot):
     @tasks.loop(minutes=10)
     async def fetch_nba_data():
+        print("NBA fetch loop is running...")
         try:
             nba_odds_channel = bot.get_channel(DISCORD_CHANNEL_ID_NBA_ODDS)
             nba_news_channel = bot.get_channel(DISCORD_CHANNEL_ID_NBA_NEWS)
@@ -85,10 +87,13 @@ def start_nba_updates(bot):
             if isinstance(news_embed, str):
                 news_embed = discord.Embed(title="Error Fetching NBA News", description=news_embed, color=discord.Color.red())
             await nba_news_channel.send(embed=news_embed)
+
         except Exception as e:
             print(f"Error fetching NBA data: {e}")
 
     @bot.event
     async def on_ready():
-        fetch_nba_data.start()
+        if not fetch_nba_data.is_running():
+            fetch_nba_data.start()
         print("NBA updates have started.")
+

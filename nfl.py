@@ -96,7 +96,7 @@ def start_nfl_updates(bot):
     @tasks.loop(minutes=10)
     async def fetch_nfl_data():
         """Fetch and update NFL data to the specified Discord channels."""
-        print("Fetching NFL data...")  # Debug statement
+        print("NFL fetch loop is running...")
         try:
             nfl_odds_channel = bot.get_channel(DISCORD_CHANNEL_ID_NFL_ODDS)
             nfl_news_channel = bot.get_channel(DISCORD_CHANNEL_ID_NFL_NEWS)
