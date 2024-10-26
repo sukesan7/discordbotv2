@@ -16,7 +16,7 @@ This is a multipurpose discord bot under development  designed to aid in sportsb
 - Manually Search Latest Odds and News for NFL and NBA
 - Interval Updates on News and Odds for NFL and NBA to Specific Channels
 - Ask Feature using OpenAI's API to create a ChatBot System
-- Preditions Based on Machine Learning from XGBoost and Random Forest to Fetch and Manipulate Data from an API endpoint
+- Preditions Based on Machine Learning from XGBoost and Random Forest to Fetch and Manipulate Data from an API endpoint (Not Real-World Data, Used for Data Manipulation and Estimations)
 
 
 
