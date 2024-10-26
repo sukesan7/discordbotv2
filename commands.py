@@ -8,6 +8,7 @@ from nba import fetch_latest_nba_odds, fetch_latest_nba_news
 from nfl import fetch_latest_nfl_odds, fetch_latest_nfl_news
 import openai
 from security import OPENAI_API_KEY
+from predictions import generate_predictions_for_today
 
 
 # --------------------------------------------------------------------------
@@ -609,6 +610,9 @@ def setup_commands(bot): #setup the commands
 
         await ctx.send(embed=odds_embed)
 
+    # -------------------------------------------------------------------------------------------------------------
+    # --------------------------------------------- Prediction Models ---------------------------------------------
+    # -------------------------------------------------------------------------------------------------------------
 
     # --------------- Command for finding the news of a desired sport
     @bot.command(name='news')
@@ -648,3 +652,53 @@ def setup_commands(bot): #setup the commands
             news_embed = discord.Embed(title=f"Error Fetching {sport.upper()} News", description=news_embed, color=discord.Color.red())
 
         await ctx.send(embed=news_embed)
+
+
+    # --------------- Command for predictions
+    @bot.command(name='predict')
+    async def predict(ctx):
+        """Provide predictions for NBA and NFL games for today."""
+        await ctx.send("Gathering predictions, please wait...")
+        
+        try:
+            results = generate_predictions_for_today()
+            
+            nba_results = results.get("nba", "No NBA games today.")
+            nfl_results = results.get("nfl", "No NFL games today.")
+
+            nba_message = format_prediction_message("NBA", nba_results)
+            nfl_message = format_prediction_message("NFL", nfl_results)
+            
+            if nba_results != "No NBA games today.":
+                await ctx.send(embed=nba_message)
+            if nfl_results != "No NFL games today.":
+                await ctx.send(embed=nfl_message)
+            
+        except Exception as e:
+            await ctx.send(f"An error occurred while fetching predictions: {str(e)}")
+
+    def format_prediction_message(sport, results):
+        """Format the prediction results into an embedded message."""
+        embed = discord.Embed(title=f"{sport} Predictions for Today", color=discord.Color.blue())
+
+        if isinstance(results, str):
+            embed.description = results
+        else:
+            for result in results:
+                home_team = result.get('HomeTeam')
+                away_team = result.get('AwayTeam')
+                combined_prediction = result.get('combined_prediction', 'N/A')
+                rf_prediction = result.get('rf_prediction', 'N/A')
+                xgb_prediction = result.get('xgb_prediction', 'N/A')
+                
+                embed.add_field(
+                    name=f"{home_team} vs {away_team}",
+                    value=(
+                        f"**Combined Prediction:** {combined_prediction}\n"
+                        f"**RandomForest Prediction:** {rf_prediction}\n"
+                        f"**XGBoost Prediction:** {xgb_prediction}"
+                    ),
+                    inline=False
+                )
+        
+        return embed
