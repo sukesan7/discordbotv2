@@ -51,8 +51,8 @@ async def fetch_latest_nfl_odds():
     except Exception as e:
         return f"Error fetching latest NFL odds: {e}"
 
-async def fetch_latest_nfl_news():
-    """Fetch the latest NFL news and compare with the last fetched data."""
+async def fetch_latest_nfl_news(ignore_cache=False):
+    """Fetch the latest NFL news and compare with the last fetched data, unless ignore_cache is True."""
     global last_news_data
     try:
         response = requests.get(NFL_NEWS_URL)
@@ -62,9 +62,11 @@ async def fetch_latest_nfl_news():
         if not articles:
             return "No NFL news found."
 
-        if articles != last_news_data:
+        # Check if the articles are different from the last fetched data or if cache should be ignored
+        if ignore_cache or articles != last_news_data:
             last_news_data = articles  # Update the cache if new data is found.
             embed = discord.Embed(title="NFL News", color=discord.Color.orange())
+
             for article in articles[:5]:  # Limit to the top 5 news articles
                 title = article.get('headline', 'No title')
                 description = article.get('description', 'No description available')
@@ -72,9 +74,13 @@ async def fetch_latest_nfl_news():
 
                 embed.add_field(name=title, value=f"{description}\n[Read more]({link})", inline=False)
 
+            # Ensure the embed has at least one field before sending
+            if len(embed.fields) == 0:
+                return "No new NFL news available at the moment."
+
             return embed
         else:
-            return None  # No new data found.
+            return "No new NFL news available at the moment."
 
     except Exception as e:
         return f"Error fetching latest NFL news: {e}"
@@ -112,8 +118,8 @@ async def fetch_latest_nfl_scores():
 
 def start_nfl_updates(bot):
     """Start NFL updates with a scheduled task."""
-    
-    @tasks.loop(minutes=30)
+
+    @tasks.loop(minutes=90)
     async def fetch_nfl_data():
         """Fetch and update NFL data to the specified Discord channels."""
         print("NFL fetch loop is running...")
@@ -123,7 +129,7 @@ def start_nfl_updates(bot):
 
             odds_embed = await fetch_latest_nfl_odds()
             news_embed = await fetch_latest_nfl_news()
-            scores_embed = await fetch_latest_nfl_scores()
+            # Removed automatic scores sending
 
             # Send odds
             if odds_embed:
@@ -137,12 +143,6 @@ def start_nfl_updates(bot):
                     news_embed = discord.Embed(title="Error Fetching NFL News", description=news_embed, color=discord.Color.red())
                 await nfl_news_channel.send(embed=news_embed)
 
-            # Send scores
-            if scores_embed:
-                if isinstance(scores_embed, str):
-                    scores_embed = discord.Embed(title="Error Fetching NFL Scores", description=scores_embed, color=discord.Color.red())
-                await nfl_news_channel.send(embed=scores_embed)
-
         except Exception as e:
             print(f"Error fetching NFL data: {e}")
 
@@ -150,3 +150,12 @@ def start_nfl_updates(bot):
     if not fetch_nfl_data.is_running():
         fetch_nfl_data.start()
         print("NFL updates loop has started.")
+
+async def send_scores_to_channel(channel):
+    """Send the latest NFL scores to a specific channel."""
+    scores_embed = await fetch_latest_nfl_scores()
+    if scores_embed:
+        if isinstance(scores_embed, str):
+            scores_embed = discord.Embed(title="Error Fetching NFL Scores", description=scores_embed, color=discord.Color.red())
+        await channel.send(embed=scores_embed)
+

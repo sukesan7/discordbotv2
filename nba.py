@@ -79,7 +79,7 @@ async def fetch_latest_nba_news():
         return f"Error fetching NBA news: {e}"
 
 def start_nba_updates(bot):
-    @tasks.loop(minutes=30)
+    @tasks.loop(minutes=90)
     async def fetch_nba_data():
         print("NBA fetch loop is running...")
         try:

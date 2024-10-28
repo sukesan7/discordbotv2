@@ -5,7 +5,7 @@ import asyncio
 import requests
 import datetime
 from nba import fetch_latest_nba_odds, fetch_latest_nba_news
-from nfl import fetch_latest_nfl_odds, fetch_latest_nfl_news
+from nfl import fetch_latest_nfl_odds, fetch_latest_nfl_news, send_scores_to_channel
 import openai
 from security import OPENAI_API_KEY
 from predictions import generate_predictions_for_today
@@ -609,6 +609,12 @@ def setup_commands(bot): #setup the commands
             odds_embed = discord.Embed(title=f"Error Fetching {sport.upper()} Odds", description=odds_embed, color=discord.Color.red())
 
         await ctx.send(embed=odds_embed)
+
+    # --------------- Command to find the scores
+    @bot.command(name='scores')
+    async def scores_command(ctx):
+        """Fetch and send the latest NFL scores."""
+        await send_scores_to_channel(ctx.channel)
 
     # -------------------------------------------------------------------------------------------------------------
     # --------------------------------------------- Prediction Models ---------------------------------------------
