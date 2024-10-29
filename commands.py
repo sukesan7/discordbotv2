@@ -302,6 +302,7 @@ def setup_commands(bot): #setup the commands
         embed.add_field(name=".search <sport> <team name>", value="Searches for a specific team to display information.", inline=False)
         embed.add_field(name=".odds <sport>", value="Shows the current odds for that sport", inline=False)
         embed.add_field(name=".news <sport>", value="Shows the current news for that sport", inline=False)
+        embed.add_field(name=".scores", value="Will show the Live and Final scores for the NFL", inline=False)
 
         embed.set_footer(text="sportsbetting")
         await ctx.send(embed=embed)
