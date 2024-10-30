@@ -35,13 +35,13 @@ async def fetch_latest_nfl_odds():
         data = response.json()
 
         if not data:
-            return "No NFL odds data found."
+            return None  # Return None if no new odds data found
 
         if data != last_odds_data:
-            last_odds_data = data  # Update the cache if new data is found.
+            last_odds_data = data  # Update the cache with new data
             embed = discord.Embed(title="NFL Odds", color=discord.Color.green())
 
-            for game in data[:5]:  # Safely access the first 5 games
+            for game in data[:5]:
                 home_team = game.get('home_team')
                 away_team = game.get('away_team')
                 bookmakers = game.get('bookmakers', [])
@@ -54,7 +54,6 @@ async def fetch_latest_nfl_odds():
                     home_odds, away_odds = 'N/A', 'N/A'
 
                 commence_time = game.get('commence_time', 'N/A')
-
                 description = (
                     f"Odds for {home_team} vs {away_team}\n"
                     f"Home: {home_team} ({home_odds})\n"
@@ -65,13 +64,13 @@ async def fetch_latest_nfl_odds():
 
             return embed
         else:
-            return None  # No new data found.
+            return None  # No new data found
 
     except Exception as e:
         return f"Error fetching latest NFL odds: {e}"
 
 async def fetch_latest_nfl_news(ignore_cache=False):
-    """Fetch the latest NFL news and compare with the last fetched data, unless ignore_cache is True."""
+    """Fetch the latest NFL news and return only if new data is available."""
     global last_news_data
     try:
         response = requests.get(NFL_NEWS_URL)
@@ -79,33 +78,28 @@ async def fetch_latest_nfl_news(ignore_cache=False):
         articles = data.get('articles', [])
 
         if not articles:
-            return "No NFL news found."
+            return None  # No news available
 
-        # Check if the articles are different from the last fetched data or if cache should be ignored
+        # Only return new data if it's different or cache is ignored
         if ignore_cache or articles != last_news_data:
-            last_news_data = articles  # Update the cache if new data is found.
+            last_news_data = articles  # Update the cache with new data
             embed = discord.Embed(title="NFL News", color=discord.Color.orange())
 
-            for article in articles[:5]:  # Limit to the top 5 news articles
+            for article in articles[:5]:
                 title = article.get('headline', 'No title')
                 description = article.get('description', 'No description available')
                 link = article.get('links', {}).get('web', {}).get('href', 'No link available')
-
                 embed.add_field(name=title, value=f"{description}\n[Read more]({link})", inline=False)
-
-            # Ensure the embed has at least one field before sending
-            if len(embed.fields) == 0:
-                return "No new NFL news available at the moment."
 
             return embed
         else:
-            return "No new NFL news available at the moment."
+            return None  # No new news available
 
     except Exception as e:
         return f"Error fetching latest NFL news: {e}"
 
 async def fetch_latest_nfl_scores():
-    """Fetch the latest NFL scores and compare with the last fetched data."""
+    """Fetch the latest NFL scores and return only if new data is available."""
     global last_scores_data
     try:
         response = requests.get(NFL_SCORES_URL)
@@ -113,24 +107,24 @@ async def fetch_latest_nfl_scores():
         games = data.get('events', [])
 
         if not games:
-            return "No NFL games found."
+            return None  # No games available
 
         if games != last_scores_data:
-            last_scores_data = games  # Update the cache if new data is found.
+            last_scores_data = games  # Update the cache with new data
             embed = discord.Embed(title="NFL Scores", color=discord.Color.red())
-            for game in games[:5]:  # Limit to the top 5 games
+
+            for game in games[:5]:
                 home_team = game['competitions'][0]['competitors'][0]['team']['displayName']
                 away_team = game['competitions'][0]['competitors'][1]['team']['displayName']
                 home_score = game['competitions'][0]['competitors'][0]['score']
                 away_score = game['competitions'][0]['competitors'][1]['score']
                 status = game['status']['type']['name']
-
                 description = f"{home_team} vs {away_team}\nScore: {home_score} - {away_score}\nStatus: {status}"
                 embed.add_field(name=f"{home_team} vs {away_team}", value=description, inline=False)
 
             return embed
         else:
-            return None  # No new data found.
+            return None  # No new data found
 
     except Exception as e:
         return f"Error fetching NFL scores: {e}"
@@ -148,15 +142,14 @@ def start_nfl_updates(bot):
 
             odds_embed = await fetch_latest_nfl_odds()
             news_embed = await fetch_latest_nfl_news()
-            # Removed automatic scores sending
 
-            # Send odds
+            # Send odds only if new data is available
             if odds_embed:
                 if isinstance(odds_embed, str):
                     odds_embed = discord.Embed(title="Error Fetching NFL Odds", description=odds_embed, color=discord.Color.red())
                 await nfl_odds_channel.send(embed=odds_embed)
 
-            # Send news
+            # Send news only if new data is available
             if news_embed:
                 if isinstance(news_embed, str):
                     news_embed = discord.Embed(title="Error Fetching NFL News", description=news_embed, color=discord.Color.red())
@@ -177,4 +170,3 @@ async def send_nfl_scores_to_channel(channel):
         if isinstance(scores_embed, str):
             scores_embed = discord.Embed(title="Error Fetching NFL Scores", description=scores_embed, color=discord.Color.red())
         await channel.send(embed=scores_embed)
-
