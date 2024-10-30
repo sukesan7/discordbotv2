@@ -24,7 +24,14 @@ async def fetch_latest_nfl_odds():
     """Fetch the latest NFL odds and compare with the last fetched data."""
     global last_odds_data
     try:
-        response = requests.get(f"{NFL_ODDS_URL}?apiKey={ODDS_API_KEY}&regions=us&markets=h2h,spreads")
+        params = {
+            "regions": "us",
+            "markets": "h2h,spreads",
+            "oddsFormat": "american",
+            "apiKey": ODDS_API_KEY
+        }
+        response = requests.get(NFL_ODDS_URL, params=params)
+        response.raise_for_status()
         data = response.json()
 
         if not data:
@@ -33,15 +40,27 @@ async def fetch_latest_nfl_odds():
         if data != last_odds_data:
             last_odds_data = data  # Update the cache if new data is found.
             embed = discord.Embed(title="NFL Odds", color=discord.Color.green())
-            for game in data[:5]:  # Limit to the top 5 games
-                home_team = game['home_team']
-                away_team = game['away_team']
-                odds = game['bookmakers'][0]['markets'][0]['outcomes']
-                home_odds = next((o['price'] for o in odds if o['name'] == home_team), 'N/A')
-                away_odds = next((o['price'] for o in odds if o['name'] == away_team), 'N/A')
-                commence_time = game['commence_time']
 
-                description = f"Odds for {home_team} vs {away_team}\nHome: {home_team} ({home_odds})\nAway: {away_team} ({away_odds})\nGame Time: {commence_time}"
+            for game in data[:5]:  # Safely access the first 5 games
+                home_team = game.get('home_team')
+                away_team = game.get('away_team')
+                bookmakers = game.get('bookmakers', [])
+
+                if bookmakers and bookmakers[0].get('markets'):
+                    outcomes = bookmakers[0]['markets'][0].get('outcomes', [])
+                    home_odds = next((o['price'] for o in outcomes if o['name'] == home_team), 'N/A')
+                    away_odds = next((o['price'] for o in outcomes if o['name'] == away_team), 'N/A')
+                else:
+                    home_odds, away_odds = 'N/A', 'N/A'
+
+                commence_time = game.get('commence_time', 'N/A')
+
+                description = (
+                    f"Odds for {home_team} vs {away_team}\n"
+                    f"Home: {home_team} ({home_odds})\n"
+                    f"Away: {away_team} ({away_odds})\n"
+                    f"Game Time: {commence_time}"
+                )
                 embed.add_field(name=f"{home_team} vs {away_team}", value=description, inline=False)
 
             return embed
@@ -151,7 +170,7 @@ def start_nfl_updates(bot):
         fetch_nfl_data.start()
         print("NFL updates loop has started.")
 
-async def send_scores_to_channel(channel):
+async def send_nfl_scores_to_channel(channel):
     """Send the latest NFL scores to a specific channel."""
     scores_embed = await fetch_latest_nfl_scores()
     if scores_embed:
