@@ -9,21 +9,22 @@ This is a multipurpose discord bot under development  designed to aid in sportsb
 
 ## Features
 
-- Basic Server Commands (serverinfo, userinfo)
-- Music Capabilities (play, stop, pause, queue)
+- Application Based Server Commands (Live Scores, News Reports, Searching Team Information, Match Lineups)
+- Music Capabilities (Play Songs from YouTube and Soundcloud, Queue music in a playlist, Pause Track, Skip Tracks, and Stop Tracks)
 - Sports Match History
 - Search Function for Sports and Teams
-- Manually Search Latest Odds and News for NFL and NBA
+- Search Latest Odds and News for NFL and NBA
 - Interval Updates on News and Odds for NFL and NBA to Specific Channels
 - Ask Feature using OpenAI's API to create a ChatBot System
 - Preditions Based on Machine Learning from XGBoost and Random Forest to Fetch and Manipulate Data from an API endpoint (Not Real-World Data, Used for Data Manipulation and Estimations)
-
+- Live Scores of the NFL (currently)
 
 
 ## Screenshots
-![image](https://github.com/user-attachments/assets/b79d93aa-6c6b-45b8-a084-bb2d0fde26b7)
-![image](https://github.com/user-attachments/assets/5471d2d2-ccf3-4032-951b-6d3741288607)
-![image](https://github.com/user-attachments/assets/e6e3eb80-9b18-4db2-9599-1eb924cc58fd)
+![image](https://github.com/user-attachments/assets/2d1e13e5-b622-4189-9be1-8a3943b6f6d0)
+![image](https://github.com/user-attachments/assets/924832b3-9fa8-4bc8-bf41-f7b451512384)
+![image](https://github.com/user-attachments/assets/58538126-284d-4238-b8af-659facfdce69)
+![image](https://github.com/user-attachments/assets/279be95b-e669-4f48-be4b-c6118b727dce)
 
 
 
