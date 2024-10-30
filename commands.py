@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord import app_commands
+from discord import app_commands, Color, Embed, Interaction, TextChannel
 import yt_dlp
 import asyncio
 import requests
@@ -10,7 +10,7 @@ from nba import send_nba_scores_to_channel as nba_scores
 from nfl import fetch_latest_nfl_odds, fetch_latest_nfl_news
 from nfl import send_nfl_scores_to_channel as nfl_scores
 import openai
-from security import OPENAI_API_KEY
+from security import OPENAI_API_KEY, DISCORD_CHANNEL_ID_PICKS
 from predictions import generate_predictions_for_today
 
 
@@ -20,6 +20,7 @@ from predictions import generate_predictions_for_today
 
 # --------------- Setup OpenAI API Key
 openai.api_key = OPENAI_API_KEY
+PICKS_CHANNEL_NAME = "picks"
 
 # --------------- Define the ESPN URLs for NBA and NFL searching
 espn_urls = {
@@ -511,20 +512,26 @@ class SportsBot(commands.Cog):
         await interaction.response.send_message(embed=odds_embed)
 
     # --------------- Command to find the scores
-    async def scores(self, interaction: discord.Interaction):
+    @app_commands.command(name="scores", description="Fetch and display the latest NBA and NFL scores.")
+    async def scores(self, interaction: Interaction):
         """Fetch and send the latest NBA and NFL scores."""
         await interaction.response.defer()
 
         try:
+            # Fetch NBA and NFL scores using the helper functions.
             nba_embed = await nba_scores(interaction.channel)
             nfl_embed = await nfl_scores(interaction.channel)
 
+            # Send NBA scores if available.
             if nba_embed:
                 await interaction.followup.send(embed=nba_embed)
+
+            # Send NFL scores if available.
             if nfl_embed:
                 await interaction.followup.send(embed=nfl_embed)
 
         except Exception as e:
+            # Handle errors and provide feedback to the user.
             await interaction.followup.send(f"Error fetching scores: {str(e)}", ephemeral=True)
 
 
@@ -608,94 +615,106 @@ class SportsBot(commands.Cog):
         embed.set_footer(text="These values are not real data. Showcase only.")
         return embed
 
-    # --------------- Command for sending embedded messages
-    @app_commands.command(name="embed", description="Create and send a custom embed message to a channel.")
-    @app_commands.describe(
-        channel="Select the channel to send the embed message to",
-        title="Enter the title of the embed",
-        description="Enter the description of the embed",
-        color="Enter the color of the embed in HEX format (e.g., #FF5733)",
+    # --------------- Command for sending embedded messages):
+    @app_commands.command(
+        name="embed", 
+        description="Create a custom embed message with a selectable color."
     )
-    async def send_embed(
-        self,
-        interaction: discord.Interaction,
-        channel: discord.TextChannel,
-        title: str,
-        description: str,
-        color: str = "#3498db"
+    @app_commands.choices(
+        color=[
+            app_commands.Choice(name="Blue", value=0x3498db),
+            app_commands.Choice(name="Red", value=0xe74c3c),
+            app_commands.Choice(name="Green", value=0x2ecc71),
+            app_commands.Choice(name="Yellow", value=0xf1c40f),
+            app_commands.Choice(name="Purple", value=0x9b59b6),
+            app_commands.Choice(name="Orange", value=0xe67e22)
+        ]
+    )
+    async def embed(
+        self, 
+        interaction: Interaction, 
+        title: str, 
+        description: str, 
+        channel: TextChannel, 
+        color: app_commands.Choice[int]
     ):
-        """Creates and sends an embed message to the specified channel."""
-        await interaction.response.defer()  # Defer to prevent timeout
+        """Slash command to create a custom embed message with multi-line input."""
+        await interaction.response.defer()
 
-        # Validate HEX color input
-        try:
-            color_value = int(color.lstrip("#"), 16)
-            embed_color = discord.Color(color_value)
-        except ValueError:
-            await interaction.followup.send(
-                "Invalid HEX color. Please use a format like #FF5733.",
-                ephemeral=True
-            )
+        # Replace "\n" with actual newlines to support multi-line input.
+        description = description.replace("\\n", "\n")
+
+        embed = Embed(
+            title=title, 
+            description=description, 
+            color=Color(color.value)
+        )
+        embed.set_footer(text="Last Call - Sports Bets")
+
+        # Send the embed to the specified channel
+        await channel.send(embed=embed)
+        await interaction.followup.send(f"Embed sent to {channel.mention}!")
+
+    # --------------- Command for custom picks to a specific channel
+    @app_commands.command(name="picks", description="Create betting picks for NBA or NFL.")
+    async def picks(
+        self, 
+        interaction: discord.Interaction,
+        sport: str,  # NBA or NFL
+        bet_type: str,  # Parlay or Singles
+        team_matchup: str,  # Team A vs Team B
+        player1_name: str, 
+        player1_points: int = None,
+        player1_rebounds: int = None,
+        player1_assists: int = None,
+        player2_name: str = None,
+        player2_points: int = None,
+        player2_rebounds: int = None,
+        player2_assists: int = None,
+        player3_name: str = None,
+        player3_points: int = None,
+        player3_rebounds: int = None,
+        player3_assists: int = None,
+    ):
+        """Create and post custom sports betting picks."""
+        await interaction.response.defer()
+
+        # Find the channel named 'picks'
+        picks_channel = discord.utils.get(interaction.guild.text_channels, name=PICKS_CHANNEL_NAME)
+        if not picks_channel:
+            await interaction.followup.send(f"Channel named '{PICKS_CHANNEL_NAME}' not found.", ephemeral=True)
             return
 
-        # Create the embed message
-        @app_commands.command(name="picks", description="Create betting picks for NBA or NFL.")
-        async def picks(
-            self, 
-            interaction: discord.Interaction,
-            sport: str,  # NBA or NFL
-            bet_type: str,  # Parlay or Singles
-            team_matchup: str,  # Team A vs Team B
-            player1_name: str, 
-            player1_points: int = None,
-            player1_rebounds: int = None,
-            player1_assists: int = None,
-            player2_name: str = None,
-            player2_points: int = None,
-            player2_rebounds: int = None,
-            player2_assists: int = None,
-            player3_name: str = None,
-            player3_points: int = None,
-            player3_rebounds: int = None,
-            player3_assists: int = None,
-        ):
-            """Create and post custom sports betting picks."""
-            await interaction.response.defer()
+        # Build the embed
+        embed = discord.Embed(
+            title=f"{sport.upper()} {bet_type.capitalize()}",
+            description=f"**{team_matchup}**",
+            color=discord.Color.blue()
+        )
 
-            # Find the channel named 'picks'
-            picks_channel = discord.utils.get(interaction.guild.text_channels, name=PICKS_CHANNEL_NAME)
-            if not picks_channel:
-                await interaction.followup.send(f"Channel named '{PICKS_CHANNEL_NAME}' not found.", ephemeral=True)
-                return
+        # Add players and their stats if provided
+        def format_player(player_name, points, rebounds, assists):
+            """Helper to format player information."""
+            stats = []
+            if points is not None: stats.append(f"{points}+ Points")
+            if rebounds is not None: stats.append(f"{rebounds}+ Rebounds")
+            if assists is not None: stats.append(f"{assists}+ Assists")
+            return f"{player_name}: {', '.join(stats)}" if stats else None
 
-            # Build the embed
-            embed = discord.Embed(
-                title=f"{sport.upper()} {bet_type.capitalize()}",
-                description=f"**{team_matchup}**",
-                color=discord.Color.blue()
-            )
+        player1_info = format_player(player1_name, player1_points, player1_rebounds, player1_assists)
+        player2_info = format_player(player2_name, player2_points, player2_rebounds, player2_assists)
+        player3_info = format_player(player3_name, player3_points, player3_rebounds, player3_assists)
 
-            # Add players and their stats if provided
-            def format_player(player_name, points, rebounds, assists):
-                """Helper to format player information."""
-                stats = []
-                if points is not None: stats.append(f"{points}+ Points")
-                if rebounds is not None: stats.append(f"{rebounds}+ Rebounds")
-                if assists is not None: stats.append(f"{assists}+ Assists")
-                return f"{player_name}: {', '.join(stats)}" if stats else None
+        # Add player information to the embed
+        for player_info in [player1_info, player2_info, player3_info]:
+            if player_info:
+                embed.add_field(name="Player", value=player_info, inline=False)
 
-            player1_info = format_player(player1_name, player1_points, player1_rebounds, player1_assists)
-            player2_info = format_player(player2_name, player2_points, player2_rebounds, player2_assists)
-            player3_info = format_player(player3_name, player3_points, player3_rebounds, player3_assists)
+        # Send the embed to the picks channel
+        await picks_channel.send(embed=embed)
+        await interaction.followup.send(f"Picks sent to {picks_channel.mention}!", ephemeral=True)
 
-            # Add player information to the embed
-            for player_info in [player1_info, player2_info, player3_info]:
-                if player_info:
-                    embed.add_field(name="Player", value=player_info, inline=False)
 
-            # Send the embed to the picks channel
-            await picks_channel.send(embed=embed)
-            await interaction.followup.send(f"Picks sent to {picks_channel.mention}!", ephemeral=True)
 
 # add the cog to the bot
 async def setup(bot):
