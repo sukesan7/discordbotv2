@@ -40,6 +40,27 @@ YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist': 'True', 'default_search
 # --------------- Queue for the music bot 
 queue = [] 
 
+# ----- Cog for role button
+class RoleButton(discord.ui.View):
+    def __init__(self, role_id):
+        super().__init__(timeout=None)  # No timeout so the button stays active.
+        self.role_id = role_id
+
+    @discord.ui.button(label="Notify Me!", style=discord.ButtonStyle.primary)
+    async def notify_me_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        role = interaction.guild.get_role(self.role_id)
+
+        if not role:
+            await interaction.response.send_message("Role not found.", ephemeral=True)
+            return
+
+        if role in interaction.user.roles:
+            await interaction.user.remove_roles(role)
+            await interaction.response.send_message(f"Removed {role.name} role.", ephemeral=True)
+        else:
+            await interaction.user.add_roles(role)
+            await interaction.response.send_message(f"Added {role.name} role.", ephemeral=True)
+
 
 # ----------------------------------------------------------------------------
 # ------------------------------ Commands Below ------------------------------
@@ -714,8 +735,27 @@ class SportsBot(commands.Cog):
         await picks_channel.send(embed=embed)
         await interaction.followup.send(f"Picks sent to {picks_channel.mention}!", ephemeral=True)
 
+    # --------------- Command for custom react role message
+    @app_commands.command(name="react", description="Send an embed with a button to assign a role.")
+    @app_commands.describe(channel="Select the channel where the message will be sent.")
+    async def react(self, interaction: discord.Interaction, channel: discord.TextChannel):
+        """Send a message with a role assignment button to a specific channel."""
+        await interaction.response.defer()
+
+        embed = discord.Embed(
+            title="React Roles",
+            description="Click the **Notify Me!** button below to receive notifications about our bets!",
+            color=discord.Color.red()
+        )
+        embed.set_footer(text="Last Call - Sports Bets")
+
+        role_id = 1301289697712013404  # Replace with your actual role ID.
+        view = RoleButton(role_id)
+
+        await channel.send(embed=embed, view=view)
+        await interaction.followup.send(f"Message sent to {channel.mention}!", ephemeral=True)
 
 
 # add the cog to the bot
-async def setup(bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(SportsBot(bot))
