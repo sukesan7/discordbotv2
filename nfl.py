@@ -132,7 +132,7 @@ async def fetch_latest_nfl_scores():
 def start_nfl_updates(bot):
     """Start NFL updates with a scheduled task."""
 
-    @tasks.loop(minutes=90)
+    @tasks.loop(minutes=360)
     async def fetch_nfl_data():
         """Fetch and update NFL data to the specified Discord channels."""
         print("NFL fetch loop is running...")

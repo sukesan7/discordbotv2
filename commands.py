@@ -308,6 +308,8 @@ class SportsBot(commands.Cog):
         embed.add_field(name="/odds <sport>", value="Shows the current odds for that sport.", inline=False)
         embed.add_field(name="/news <sport>", value="Shows the current news for that sport.", inline=False)
         embed.add_field(name="/scores", value="Will show the Live and Final scores for the NFL.", inline=False)
+        embed.add_field(name="/embed", value="Send an Embedded Message to a Channel of your choice", inline=False)
+        embed.add_field(name="/react", value="Send a reaction-role message to a pre-defined channel", inline=False)
 
         embed.set_footer(text="Last Call - Sports Bets")
         await interaction.response.send_message(embed=embed)
