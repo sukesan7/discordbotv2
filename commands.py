@@ -99,7 +99,7 @@ class SportsBot(commands.Cog):
             description=f"**Server name:** {guild.name}\n**Total members:** {guild.member_count}",
             color=discord.Color.red()
         )
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
 
         await interaction.response.send_message(embed=embed)
 
@@ -112,7 +112,7 @@ class SportsBot(commands.Cog):
             description="This Discord bot was created by .ss7 for sports betting. It is still under construction.",
             color=discord.Color.red()
         )
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
 
         await interaction.response.send_message(embed=embed)
 
@@ -124,7 +124,7 @@ class SportsBot(commands.Cog):
         embed.add_field(name="User", value=member.name, inline=False)
         embed.add_field(name="Joined at", value=member.joined_at.strftime("%Y-%m-%d %H:%M:%S"), inline=False)
         embed.add_field(name="ID", value=member.id, inline=False)
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
         await interaction.response.send_message(embed=embed)
 
     # --------------- Command to play music
@@ -147,7 +147,7 @@ class SportsBot(commands.Cog):
                     description=f"**{title}** added to the queue.",
                     color=discord.Color.red()
                 )
-                embed.set_footer(text="Last Call - Sports Bets")
+                embed.set_footer(text="Strategic Investments & Sports Analysis")
                 await interaction.response.send_message(embed=embed)
 
             if not interaction.guild.voice_client.is_playing():
@@ -167,7 +167,7 @@ class SportsBot(commands.Cog):
                     description=f"**{title}**",
                     color=discord.Color.red()
                 )
-                embed.set_footer(text="Last Call - Sports Bets")
+                embed.set_footer(text="Strategic Investments & Sports Analysis")
                 await interaction.channel.send(embed=embed)
             except Exception as e:
                 await interaction.channel.send(f"Error playing {title}: {e}")
@@ -189,7 +189,7 @@ class SportsBot(commands.Cog):
                 description="The track has been skipped.",
                 color=discord.Color.red()
             )
-            embed.set_footer(text="Last Call - Sports Bets")
+            embed.set_footer(text="Strategic Investments & Sports Analysis")
 
             await interaction.response.send_message(embed=embed)
         else:
@@ -205,14 +205,14 @@ class SportsBot(commands.Cog):
                 description="The queue is empty.",
                 color=discord.Color.red()
             )
-            embed.set_footer(text="Last Call - Sports Bets")
+            embed.set_footer(text="Strategic Investments & Sports Analysis")
             return await interaction.response.send_message(embed=embed)
 
         embed = discord.Embed(title="Music Queue", color=discord.Color.red())
         for idx, (_, title) in enumerate(self.queue, start=1):
             embed.add_field(name=f"{idx}. {title}", value='\u200b', inline=False)
 
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
         await interaction.response.send_message(embed=embed)
 
     # --------------- Command to pause the current song
@@ -225,14 +225,14 @@ class SportsBot(commands.Cog):
                 description="The queue is empty.",
                 color=discord.Color.red()
             )
-            embed.set_footer(text="Last Call - Sports Bets")
+            embed.set_footer(text="Strategic Investments & Sports Analysis")
             return await interaction.response.send_message(embed=embed)
 
         embed = discord.Embed(title="Music Queue", color=discord.Color.red())
         for idx, (_, title) in enumerate(self.queue, start=1):
             embed.add_field(name=f"{idx}. {title}", value='\u200b', inline=False)
 
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
         await interaction.response.send_message(embed=embed)
 
     # --------------- Command to resume the paused song
@@ -249,7 +249,7 @@ class SportsBot(commands.Cog):
             embed.title = "No Track Paused"
             embed.description = "There is no track currently paused to resume."
 
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
         await interaction.response.send_message(embed=embed)
 
     # --------------- Command to stop the current song
@@ -266,7 +266,7 @@ class SportsBot(commands.Cog):
             embed.title = "No Track Playing"
             embed.description = "There is no track currently playing."
 
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
         await interaction.response.send_message(embed=embed)
 
     # --------------- Command to disconnect the bot from the voice channel
@@ -282,7 +282,7 @@ class SportsBot(commands.Cog):
             embed.title = "Not Connected"
             embed.description = "The bot is not connected to any voice channel."
 
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
         await interaction.response.send_message(embed=embed)
 
     # --------------- Help command to show all available commands
@@ -311,7 +311,7 @@ class SportsBot(commands.Cog):
         embed.add_field(name="/embed", value="Send an Embedded Message to a Channel of your choice", inline=False)
         embed.add_field(name="/react", value="Send a reaction-role message to a pre-defined channel", inline=False)
 
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
         await interaction.response.send_message(embed=embed)
 
 
@@ -339,7 +339,7 @@ class SportsBot(commands.Cog):
             description="Here are the matches for NBA and NFL on the selected date:",
             color=discord.Color.red()
         )
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
 
         # Fetch NBA matches
         nba_url = f"http://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates={date.replace('-', '')}"
@@ -672,7 +672,7 @@ class SportsBot(commands.Cog):
             description=description, 
             color=Color(color.value)
         )
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
 
         # Send the embed to the specified channel
         await channel.send(embed=embed)
@@ -749,7 +749,7 @@ class SportsBot(commands.Cog):
             description="Click the **Notify Me!** button below to receive notifications about our bets!",
             color=discord.Color.red()
         )
-        embed.set_footer(text="Last Call - Sports Bets")
+        embed.set_footer(text="Strategic Investments & Sports Analysis")
 
         role_id = 1301289697712013404  # Replace with your actual role ID.
         view = RoleButton(role_id)
